@@ -201,7 +201,9 @@ workflow ILLUMINA {
     FASTQC_FASTP (
         ch_cat_fastq,
         params.save_trimmed_fail,
-        false
+
+        // True for save_merged_reads
+        true
     )
     ch_variants_fastq = FASTQC_FASTP.out.reads
     ch_versions = ch_versions.mix(FASTQC_FASTP.out.versions)

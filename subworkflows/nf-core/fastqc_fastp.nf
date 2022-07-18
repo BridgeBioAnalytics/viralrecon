@@ -62,7 +62,7 @@ workflow FASTQC_FASTP {
         //
         // Filter empty FastQ files after adapter trimming so FastQC doesn't fail
         //
-        trim_reads
+        trim_reads_merged
             .join(trim_json)
             .map {
                 meta, reads, json ->
@@ -70,11 +70,11 @@ workflow FASTQC_FASTP {
                         [ meta, reads ]
                     }
             }
-            .set { trim_reads }
+            .set { trim_reads_merged }
 
         if (!params.skip_fastqc) {
             FASTQC_TRIM (
-                trim_reads
+                trim_reads_merged
             )
             fastqc_trim_html = FASTQC_TRIM.out.html
             fastqc_trim_zip  = FASTQC_TRIM.out.zip
@@ -83,7 +83,7 @@ workflow FASTQC_FASTP {
     }
 
     emit:
-    reads = trim_reads // channel: [ val(meta), [ reads ] ]
+    reads = trim_reads_merged // channel: [ val(meta), [ reads ] ]
     trim_json          // channel: [ val(meta), [ json ] ]
     trim_html          // channel: [ val(meta), [ html ] ]
     trim_log           // channel: [ val(meta), [ log ] ]

@@ -23,13 +23,14 @@ process BOWTIE2_ALIGN {
     task.ext.when == null || task.ext.when
 
     script:
+    single_end = true
     def args = task.ext.args ?: ""
     def args2 = task.ext.args2 ?: ""
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     def unaligned = ""
     def reads_args = ""
-    if (meta.single_end) {
+    if (single_end) {
         unaligned = save_unaligned ? "--un-gz ${prefix}.unmapped.fastq.gz" : ""
         reads_args = "-U ${reads}"
     } else {

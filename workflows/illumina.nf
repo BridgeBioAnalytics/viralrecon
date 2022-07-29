@@ -413,47 +413,47 @@ workflow ILLUMINA {
     ch_bcftools_stats_multiqc = Channel.empty()
     ch_snpsift_txt            = Channel.empty()
     ch_snpeff_multiqc         = Channel.empty()
-    if (!params.skip_variants && variant_caller == 'ivar') {
-        VARIANTS_IVAR (
-            ch_bam,
-            PREPARE_GENOME.out.fasta,
-            (params.protocol == 'amplicon' || !params.skip_asciigenome) ? PREPARE_GENOME.out.fai : [],
-            (params.protocol == 'amplicon' || !params.skip_asciigenome) ? PREPARE_GENOME.out.chrom_sizes : [],
-            PREPARE_GENOME.out.gff,
-            (params.protocol == 'amplicon' && params.primer_bed) ? PREPARE_GENOME.out.primer_bed : [],
-            PREPARE_GENOME.out.snpeff_db,
-            PREPARE_GENOME.out.snpeff_config,
-            ch_ivar_variants_header_mqc
-        )
-        ch_vcf                    = VARIANTS_IVAR.out.vcf
-        ch_tbi                    = VARIANTS_IVAR.out.tbi
-        ch_ivar_counts_multiqc    = VARIANTS_IVAR.out.multiqc_tsv
-        ch_bcftools_stats_multiqc = VARIANTS_IVAR.out.stats
-        ch_snpeff_multiqc         = VARIANTS_IVAR.out.snpeff_csv
-        ch_snpsift_txt            = VARIANTS_IVAR.out.snpsift_txt
-        ch_versions               = ch_versions.mix(VARIANTS_IVAR.out.versions)
-    }
+    // if (!params.skip_variants && variant_caller == 'ivar') {
+    //     VARIANTS_IVAR (
+    //         ch_bam,
+    //         PREPARE_GENOME.out.fasta,
+    //         (params.protocol == 'amplicon' || !params.skip_asciigenome) ? PREPARE_GENOME.out.fai : [],
+    //         (params.protocol == 'amplicon' || !params.skip_asciigenome) ? PREPARE_GENOME.out.chrom_sizes : [],
+    //         PREPARE_GENOME.out.gff,
+    //         (params.protocol == 'amplicon' && params.primer_bed) ? PREPARE_GENOME.out.primer_bed : [],
+    //         PREPARE_GENOME.out.snpeff_db,
+    //         PREPARE_GENOME.out.snpeff_config,
+    //         ch_ivar_variants_header_mqc
+    //     )
+    //     ch_vcf                    = VARIANTS_IVAR.out.vcf
+    //     ch_tbi                    = VARIANTS_IVAR.out.tbi
+    //     ch_ivar_counts_multiqc    = VARIANTS_IVAR.out.multiqc_tsv
+    //     ch_bcftools_stats_multiqc = VARIANTS_IVAR.out.stats
+    //     ch_snpeff_multiqc         = VARIANTS_IVAR.out.snpeff_csv
+    //     ch_snpsift_txt            = VARIANTS_IVAR.out.snpsift_txt
+    //     ch_versions               = ch_versions.mix(VARIANTS_IVAR.out.versions)
+    // }
 
-    //
-    // SUBWORKFLOW: Call variants with BCFTools
-    //
-    if (!params.skip_variants && variant_caller == 'bcftools') {
-        VARIANTS_BCFTOOLS (
-            ch_bam,
-            PREPARE_GENOME.out.fasta,
-            (params.protocol == 'amplicon' || !params.skip_asciigenome) ? PREPARE_GENOME.out.chrom_sizes : [],
-            PREPARE_GENOME.out.gff,
-            (params.protocol == 'amplicon' && params.primer_bed) ? PREPARE_GENOME.out.primer_bed : [],
-            PREPARE_GENOME.out.snpeff_db,
-            PREPARE_GENOME.out.snpeff_config
-        )
-        ch_vcf                    = VARIANTS_BCFTOOLS.out.vcf
-        ch_tbi                    = VARIANTS_BCFTOOLS.out.tbi
-        ch_bcftools_stats_multiqc = VARIANTS_BCFTOOLS.out.stats
-        ch_snpeff_multiqc         = VARIANTS_BCFTOOLS.out.snpeff_csv
-        ch_snpsift_txt            = VARIANTS_BCFTOOLS.out.snpsift_txt
-        ch_versions               = ch_versions.mix(VARIANTS_BCFTOOLS.out.versions)
-    }
+    // //
+    // // SUBWORKFLOW: Call variants with BCFTools
+    // //
+    // if (!params.skip_variants && variant_caller == 'bcftools') {
+    //     VARIANTS_BCFTOOLS (
+    //         ch_bam,
+    //         PREPARE_GENOME.out.fasta,
+    //         (params.protocol == 'amplicon' || !params.skip_asciigenome) ? PREPARE_GENOME.out.chrom_sizes : [],
+    //         PREPARE_GENOME.out.gff,
+    //         (params.protocol == 'amplicon' && params.primer_bed) ? PREPARE_GENOME.out.primer_bed : [],
+    //         PREPARE_GENOME.out.snpeff_db,
+    //         PREPARE_GENOME.out.snpeff_config
+    //     )
+    //     ch_vcf                    = VARIANTS_BCFTOOLS.out.vcf
+    //     ch_tbi                    = VARIANTS_BCFTOOLS.out.tbi
+    //     ch_bcftools_stats_multiqc = VARIANTS_BCFTOOLS.out.stats
+    //     ch_snpeff_multiqc         = VARIANTS_BCFTOOLS.out.snpeff_csv
+    //     ch_snpsift_txt            = VARIANTS_BCFTOOLS.out.snpsift_txt
+    //     ch_versions               = ch_versions.mix(VARIANTS_BCFTOOLS.out.versions)
+    // }
 
     //
     // SUBWORKFLOW: Call consensus with iVar and downstream QC
@@ -461,38 +461,38 @@ workflow ILLUMINA {
     ch_quast_multiqc    = Channel.empty()
     ch_pangolin_multiqc = Channel.empty()
     ch_nextclade_report = Channel.empty()
-    if (!params.skip_consensus && params.consensus_caller == 'ivar') {
-        CONSENSUS_IVAR (
-            ch_bam,
-            PREPARE_GENOME.out.fasta,
-            PREPARE_GENOME.out.gff,
-            PREPARE_GENOME.out.nextclade_db
-        )
+    // if (!params.skip_consensus && params.consensus_caller == 'ivar') {
+    //     CONSENSUS_IVAR (
+    //         ch_bam,
+    //         PREPARE_GENOME.out.fasta,
+    //         PREPARE_GENOME.out.gff,
+    //         PREPARE_GENOME.out.nextclade_db
+    //     )
 
-        ch_quast_multiqc    = CONSENSUS_IVAR.out.quast_tsv
-        ch_pangolin_multiqc = CONSENSUS_IVAR.out.pangolin_report
-        ch_nextclade_report = CONSENSUS_IVAR.out.nextclade_report
-        ch_versions         = ch_versions.mix(CONSENSUS_IVAR.out.versions)
-    }
+    //     ch_quast_multiqc    = CONSENSUS_IVAR.out.quast_tsv
+    //     ch_pangolin_multiqc = CONSENSUS_IVAR.out.pangolin_report
+    //     ch_nextclade_report = CONSENSUS_IVAR.out.nextclade_report
+    //     ch_versions         = ch_versions.mix(CONSENSUS_IVAR.out.versions)
+    // }
 
-    //
-    // SUBWORKFLOW: Call consensus with BCFTools
-    //
-    if (!params.skip_consensus && params.consensus_caller == 'bcftools' && variant_caller) {
-        CONSENSUS_BCFTOOLS (
-            ch_bam,
-            ch_vcf,
-            ch_tbi,
-            PREPARE_GENOME.out.fasta,
-            PREPARE_GENOME.out.gff,
-            PREPARE_GENOME.out.nextclade_db
-        )
+    // //
+    // // SUBWORKFLOW: Call consensus with BCFTools
+    // //
+    // if (!params.skip_consensus && params.consensus_caller == 'bcftools' && variant_caller) {
+    //     CONSENSUS_BCFTOOLS (
+    //         ch_bam,
+    //         ch_vcf,
+    //         ch_tbi,
+    //         PREPARE_GENOME.out.fasta,
+    //         PREPARE_GENOME.out.gff,
+    //         PREPARE_GENOME.out.nextclade_db
+    //     )
 
-        ch_quast_multiqc    = CONSENSUS_BCFTOOLS.out.quast_tsv
-        ch_pangolin_multiqc = CONSENSUS_BCFTOOLS.out.pangolin_report
-        ch_nextclade_report = CONSENSUS_BCFTOOLS.out.nextclade_report
-        ch_versions         = ch_versions.mix(CONSENSUS_BCFTOOLS.out.versions)
-    }
+    //     ch_quast_multiqc    = CONSENSUS_BCFTOOLS.out.quast_tsv
+    //     ch_pangolin_multiqc = CONSENSUS_BCFTOOLS.out.pangolin_report
+    //     ch_nextclade_report = CONSENSUS_BCFTOOLS.out.nextclade_report
+    //     ch_versions         = ch_versions.mix(CONSENSUS_BCFTOOLS.out.versions)
+    // }
 
     //
     // MODULE: Get Nextclade clade information for MultiQC report

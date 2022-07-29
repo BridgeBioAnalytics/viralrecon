@@ -24,7 +24,7 @@ process KRAKEN2_KRAKEN2 {
     task.ext.when == null || task.ext.when
 
     script:
-    single_end = true
+    def single_end = true
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def paired       = single_end ? "" : "--paired"

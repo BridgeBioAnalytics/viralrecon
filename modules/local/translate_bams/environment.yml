@@ -8,5 +8,7 @@ dependencies:
   - pandas=1.4.2
   - samtools=1.15.1
   - screed=1.0.5
+  - pip
+  - python
   - pip:
     - pysam==0.19.1

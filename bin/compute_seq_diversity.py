@@ -1,11 +1,9 @@
-import pandas as pd
-import numpy as np
 import click
-
-from scipy.stats import entropy
-import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib_venn
+import numpy as np
+import pandas as pd
+import seaborn as sns
 
 codons_nnn = {
     "TTT": "F",
@@ -356,8 +354,8 @@ def make_data_for_bubble_plot(sequence_counts):
 
 def bubble_plot(aa_combined, col_order=None, bubble_plot_png="bubble_plot.png"):
     # Create plot
-    aa_combined['percent_reads_log10'] = np.log10(aa_combined['percent_reads'])
-    col_order = sorted(list(aa_combined['library'].unique()))
+    aa_combined["percent_reads_log10"] = np.log10(aa_combined["percent_reads"])
+    col_order = sorted(list(aa_combined["library"].unique()))
     g = sns.relplot(
         x="aa_7mer_index",
         y="percent_reads_log10",

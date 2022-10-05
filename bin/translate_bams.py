@@ -1,11 +1,10 @@
-from collections import Counter
 import os
+from collections import Counter
 
 import click
 import pandas as pd
 import pysam
 import screed
-
 
 protein = {
     "TTT": "F",

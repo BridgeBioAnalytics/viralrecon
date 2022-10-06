@@ -1,4 +1,7 @@
+#!/usr/bin/env python
+
 import os
+from asyncio.log import logger
 from collections import Counter
 
 import click
@@ -136,11 +139,11 @@ def count_21nt_7aa(bams, directed_evolution_interval):
                     if deletions[0][1] == 21:
                         non_translated_counter[sample_name]["wild_type"] += 1
                     elif deletions[0][1] < 21:
-                        non_translated_counter[sample_name]["other"] += 1
+                        non_translated_counter[sample_name]["insertion_lt_21"] += 1
                     else:
-                        non_translated_counter[sample_name]["other"] += 1
+                        non_translated_counter[sample_name]["insertion_gt_21"] += 1
                 else:
-                    non_translated_counter[sample_name]["other"] += 1
+                    non_translated_counter[sample_name]["no_coverage"] += 1
 
                 # Move on to next read
                 continue
@@ -163,10 +166,6 @@ def count_21nt_7aa(bams, directed_evolution_interval):
                     ] += 1
                     continue
                 assert len(evolved_seq_translated) == 7
-                if read.query_name == "A01940:28:GW220807000:1:2101:18177:1063":
-                    import pdb
-
-                    pdb.set_trace()
                 pair = (evolved_seq_translated, evolved_seq)
                 sequence_counter[sample_name][pair] += 1
                 non_translated_counter[sample_name]["21nt_insertion"] += 1
@@ -193,10 +192,22 @@ def count_21nt_7aa(bams, directed_evolution_interval):
 
 def get_directed_evolution_interval(fasta, evolution_sequence):
     with screed.open(fasta) as records:
-        seq = records["sequence"]
-        start = seq.find(evolution_sequence)
-        end = start + len(evolution_sequence)
+        for record in records:
+            seq = record["sequence"]
+            start = seq.find(evolution_sequence)
+            end = start + len(evolution_sequence)
+            # Only look at the first sequence
+            break
+        logger.warn("Only looking at first sequence in fasta file")
     return start, end
+
+def get_top_n_per_column(sequence_counts_df, n=10):
+    dfs = []
+    for col in sequence_counts_df.columns:
+        df = sequence_counts_df.nlargest(n, col)
+        dfs.append(df)
+    top_n_per_col = pd.concat(dfs)
+    return top_n_per_col
 
 
 @click.command()
@@ -213,6 +224,11 @@ def get_directed_evolution_interval(fasta, evolution_sequence):
 @click.option(
     "--evolved-sequence-counts",
     default="evolved_sequence_counts.csv",
+    type=click.Path(),
+)
+@click.option(
+    "--evolved-sequence-counts-top-10",
+    default="evolved_sequence_counts_top_10_per_sample.csv",
     type=click.Path(),
 )
 @click.option("--insertion-summary", default="insertion_summary.csv", type=click.Path())
@@ -232,6 +248,7 @@ def main(
     fasta,
     directed_evolution_sequence,
     evolved_sequence_counts,
+    evolved_sequence_counts_top_10,
     insertion_summary,
     insertion_summary_percentages,
     cigar_strings_csv,
@@ -252,9 +269,17 @@ def main(
         bams, directed_evolution_interval
     )
     sequence_counter_df.to_csv(evolved_sequence_counts)
-    non_translated_df.to_csv(insertion_summary)
+
+    sequence_counter_df_top_n = get_top_n_per_column(sequence_counter_df)
+    sequence_counter_df_top_n.to_csv(evolved_sequence_counts_top_10)
+
+    # Write the transpose down so the sample ids are the first column (row names)
     non_translated_df_percentages = 100 * non_translated_df / non_translated_df.sum()
-    non_translated_df_percentages.to_csv(insertion_summary_percentages)
+    non_translated_df_percentages.columns = 'percent_' + non_translated_df_percentages.columns
+
+    insertion_summary_df = pd.concat([non_translated_df, non_translated_df_percentages])
+    # Write the transpose down so the sample ids are the first column (row names)
+    insertion_summary_df.T.to_csv(insertion_summary_percentages)
 
     cigar_strings_df.to_csv(cigar_strings_csv)
 

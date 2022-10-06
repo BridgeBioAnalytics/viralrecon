@@ -19,19 +19,10 @@ process MULTIQC {
     path ('kraken2/*')
     path ('bowtie2/*')
     path ('bowtie2/*')
-    path ('ivar_trim/*')
-    path ('picard_markduplicates/*')
-    path ('mosdepth/*')
-    path ('variants/*')
-    path ('variants/*')
-    path ('variants/*')
-    path ('variants/*')
-    path ('variants/*')
-    path ('variants/*')
-    path ('cutadapt/*')
-    path ('assembly_spades/*')
-    path ('assembly_unicycler/*')
-    path ('assembly_minia/*')
+    path evolved_sequence_counts_top_10_per_sample
+    path insertion_summary
+    path aa_diversity_stats
+    path position_weights
 
     output:
     path "*multiqc_report.html"     , emit: report

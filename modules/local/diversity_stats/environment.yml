@@ -1,4 +1,4 @@
-name: nf-core-translate-bam
+name: nf-core-compute-diversity
 channels:
   - conda-forge
   - bioconda

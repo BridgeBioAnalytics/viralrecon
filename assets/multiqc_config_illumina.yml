@@ -278,6 +278,67 @@ custom_data:
       table_title: "Samples failed mapped read threshold"
       namespace: "Samples failed mapping read threshold"
       format: "{:,.0f}"
+  insertion_summary:
+    id: 'insertion_summary'
+    section_name: 'Insertion Summary'
+    plot_type: 'table'
+    pconfig:
+      id: 'insertion_summary'
+      namespace: 'Insertion Summary'
+      table_title: "Library Insertion Stats"
+    headers:
+      Total reads:
+          description: 'Total number of readas sequenced'
+          format: '{:,.0f}'
+      MBp:
+          description: 'Mega base pairs'
+      '%Q30':
+          description: 'Percent of reads over Q30'
+  aa_diversity_stats:
+    id: 'aa_diversity_stats'
+    section_name: 'Diversity Summary'
+    plot_type: 'table'
+    pconfig:
+        id: 'aa_diversity_stats'
+        namespace: 'Diversity Stats'
+        table_title: "Diversity Stats"
+  evolved_sequence_counts_top_10_per_sample:
+    id: 'evolved_sequence_counts_top_10_per_sample'
+    section_name: 'Top 10 amino acids per sample'
+    plot_type: 'table'
+    pconfig:
+        id: 'evolved_sequence_counts_top_10_per_sample'
+        namespace: '7mer counts'
+  aa_position_weights:
+    id: 'aa_position_weights'
+    section_name: 'Amino acid position weights'
+    plot_type: 'bargraph'
+    pconfig:
+        id: 'aa_position_weights'
+        namespace: 'Amino acid position weights'
+
+
+table_columns_name:
+  Insertion Summary:
+    21nt_insertion: "# Reads with insertion"
+    low_quality_mapping: "# Low quality mapping"
+    no_coverage: "# No coverage on insertion"
+    insertion_lt_21: "# Insertion < 21nt"
+    insertion_gt_21: "# Insertion > 21nt"
+    percentage_21nt_insertion: "% Reads with insertion"
+    percentage_low_quality_mapping: "% Reads low quality mapping"
+    percentage_no_coverage: "% No coverage on insertion"
+    percentage_insertion_lt_21: "% Insertion < 21nt"
+    percentage_insertion_gt_21: "% Insertion > 21nt"
+
+table_cond_formatting_rules:
+  Insertion Summary-percentage_21nt_insertion:
+    pass:
+      - gt: 80
+    warn:
+      - lt: 80
+    fail:
+      - lt: 70
 
 extra_fn_clean_exts:
   - ".markduplicates"
@@ -302,3 +363,11 @@ sp:
     fn: "*.global.dist.txt"
   cutadapt:
     fn: "*.cutadapt.log"
+  insertion_summary:
+    fn: "*insertion_summary.csv"
+  evolved_sequence_counts_top_10_per_sample:
+    fn: "*evolved_sequence_counts_top_10_per_sample.csv"
+  aa_position_weights:
+    fn: "*position_weights.csv"
+  aa_diversity_stats:
+    fn: '*aa-diversity-stats.csv'

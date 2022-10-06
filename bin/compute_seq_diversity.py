@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import click
 import matplotlib.pyplot as plt
 import matplotlib_venn
@@ -117,6 +119,12 @@ def shannon(counts):
 
 
 def compute_global_stats(sequence_counts):
+    nucleotide_21mer_counts = sequence_counts.groupby(level=1).sum()
+    per_library_nucleotide_diversity_percentage = 100 * nucleotide_21mer_counts.apply(
+        lambda x: (x > 0).sum() / x.sum()
+    )
+    per_library_nucleotide_diversity_percentage.name = 'percent_nt_21mer_diversity'
+
     protein_7mer_counts = sequence_counts.groupby(level=0).sum()
     with_stop_codons = protein_7mer_counts.index.str.contains("\*")
 
@@ -135,7 +143,7 @@ def compute_global_stats(sequence_counts):
     per_libary_diversity_percentage = 100 * protein_7mer_counts_no_stop_codons.apply(
         lambda x: (x > 0).sum() / x.sum()
     )
-    per_libary_diversity_percentage.name = "percent_library_diversity"
+    per_libary_diversity_percentage.name = "percent_aa_7mer_diversity"
 
     per_library_shannon = protein_7mer_counts_no_stop_codons.apply(shannon)
     per_library_shannon.name = "shannon_index"
@@ -152,12 +160,13 @@ def compute_global_stats(sequence_counts):
 
     # get percentage of total possible 7-mers
     per_libary_percent_7mers = 100 * per_library_n_7mers / N_ALL_POSSIBLE_7MERS
-    per_libary_percent_7mers.name = "percent_7mer_diversity"
+    per_libary_percent_7mers.name = "percent_all_possible_7mers"
 
     # Concatenate everything for per library stats
     per_library_stats = pd.concat(
         [
             per_libary_diversity_percentage,
+            per_library_nucleotide_diversity_percentage,
             per_library_n_stop_codons,
             per_library_stop_codons,
             per_library_gini_coefficients,
@@ -254,7 +263,7 @@ def _compute_entropy(position_probability_matrices):
 
     for library, pwm in position_probability_matrices.items():
         # print(f'--- {library} ---')
-        library_entropy = pwm.apply(entropy)
+        library_entropy = pwm.apply(shannon)
         # print(library_entropy)
         entropies[library] = library_entropy
 
@@ -410,6 +419,7 @@ def barplot_top_kmers(bubble_plot_data, top_kmers_barplot_png):
 @click.option("--aa-diversity-stats", default="aa-diversity-stats.csv")
 @click.option("--bubble-plot-png", default="bubble_plot.png")
 @click.option("--position-weights-barplot-png", default="position_weights_barplot.png")
+@click.option("--position-weights-csv", default="position_weights.csv")
 @click.option("--top-kmers-barplot-png", default="top_kmers_barplot.png")
 @click.option("--prefix", default="")
 def main(
@@ -417,6 +427,7 @@ def main(
     aa_diversity_stats,
     bubble_plot_png,
     position_weights_barplot_png,
+    position_weights_csv,
     top_kmers_barplot_png,
     prefix,
 ):
@@ -431,7 +442,8 @@ def main(
     per_library_stats, protein_7mer_counts_no_stop_codons = compute_global_stats(
         sequence_counts
     )
-    per_library_stats.to_csv(aa_diversity_stats)
+    # Take the transpose so the samples are the row names to make it easy for MultiQC
+    per_library_stats.T.to_csv(aa_diversity_stats)
 
     try:
         venn_diagram(protein_7mer_counts_no_stop_codons, prefix)
@@ -451,6 +463,7 @@ def main(
     )
 
     position_weights_tidy = make_tidy_position_weights(position_weight_matrices)
+    position_weights_tidy.to_csv(position_weights_csv)
 
     # Make barplot of position weights, sortedy by amino acid
     barplot_position_weights(position_weights_tidy, position_weights_barplot_png)

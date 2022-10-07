@@ -250,7 +250,6 @@ def main(
     evolved_sequence_counts,
     evolved_sequence_counts_top_10,
     insertion_summary,
-    insertion_summary_percentages,
     cigar_strings_csv,
     prefix,
 ):
@@ -275,11 +274,11 @@ def main(
 
     # Write the transpose down so the sample ids are the first column (row names)
     non_translated_df_percentages = 100 * non_translated_df / non_translated_df.sum()
-    non_translated_df_percentages.columns = 'percent_' + non_translated_df_percentages.columns
+    non_translated_df_percentages.index = 'percent_' + non_translated_df_percentages.index
 
     insertion_summary_df = pd.concat([non_translated_df, non_translated_df_percentages])
     # Write the transpose down so the sample ids are the first column (row names)
-    insertion_summary_df.T.to_csv(insertion_summary_percentages)
+    insertion_summary_df.T.to_csv(insertion_summary)
 
     cigar_strings_df.to_csv(cigar_strings_csv)
 

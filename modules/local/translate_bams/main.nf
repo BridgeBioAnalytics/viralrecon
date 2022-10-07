@@ -11,7 +11,6 @@ process TRANSLATE_BAM {
     output:
     path 'evolved_sequence_counts.csv'                  , emit: evolved_7mer_counts
     path 'evolved_sequence_counts_top_10_per_sample.csv', emit: evolved_7mer_counts_top_10
-    path 'insertion_summary_percentages.csv'            , emit: insertion_summary_percentages
     path 'insertion_summary.csv'                        , emit: insertion_summary
     path 'cigar_strings.csv'                            , emit: cigar_strings
     path "versions.yml", emit: versions

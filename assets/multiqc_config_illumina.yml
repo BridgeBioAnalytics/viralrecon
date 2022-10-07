@@ -312,11 +312,9 @@ custom_data:
   aa_position_weights:
     id: 'aa_position_weights'
     section_name: 'Amino acid position weights'
-    plot_type: 'bargraph'
-    pconfig:
-        id: 'aa_position_weights'
-        namespace: 'Amino acid position weights'
-
+  bubble_plot:
+    id: 'bubble_plot'
+    section_name: 'Bubble Plot'
 
 table_columns_name:
   Insertion Summary:
@@ -368,6 +366,10 @@ sp:
   evolved_sequence_counts_top_10_per_sample:
     fn: "*evolved_sequence_counts_top_10_per_sample.csv"
   aa_position_weights:
-    fn: "*position_weights.csv"
+    fn: "*position_weights_barplot.png"
+  bubble_plot:
+    fn: "*bubble_plot.png"
   aa_diversity_stats:
     fn: '*aa-diversity-stats.csv'
+
+ignore_images: false

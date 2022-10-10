@@ -117,10 +117,12 @@ def count_21nt_7aa(bams, directed_evolution_interval):
         # create a bam files
         bamfile = pysam.AlignmentFile(bam, "rb")
 
-        for i, read in enumerate(bamfile.fetch()):
+        # For all reads covering the directed evolution interval
+        for i, read in enumerate(bamfile.fetch('amplicon', *directed_evolution_interval)):
             cigar_strings[sample_name][read.cigarstring] += 1
 
             if read.mapping_quality < 40:
+                non_translated_counter[sample_name]["low_quality_mapping"] += 1
                 continue
 
             try:
@@ -143,7 +145,7 @@ def count_21nt_7aa(bams, directed_evolution_interval):
                     else:
                         non_translated_counter[sample_name]["insertion_gt_21"] += 1
                 else:
-                    non_translated_counter[sample_name]["no_coverage"] += 1
+                    non_translated_counter[sample_name]["other"] += 1
 
                 # Move on to next read
                 continue
@@ -233,11 +235,6 @@ def get_top_n_per_column(sequence_counts_df, n=10):
 )
 @click.option("--insertion-summary", default="insertion_summary.csv", type=click.Path())
 @click.option(
-    "--insertion-summary-percentages",
-    default="insertion_summary_percentages.csv",
-    type=click.Path(),
-)
-@click.option(
     "--cigar-strings-csv",
     default="cigar_strings.csv",
     type=click.Path(),
@@ -257,7 +254,6 @@ def main(
     if prefix:
         evolved_sequence_counts = f"{prefix}__{evolved_sequence_counts}"
         insertion_summary = f"{prefix}__{insertion_summary}"
-        insertion_summary_percentages = f"{prefix}__{insertion_summary_percentages}"
         cigar_strings_csv = f"{prefix}__{cigar_strings_csv}"
 
     directed_evolution_interval = get_directed_evolution_interval(

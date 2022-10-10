@@ -286,14 +286,6 @@ custom_data:
       id: 'insertion_summary'
       namespace: 'Insertion Summary'
       table_title: "Library Insertion Stats"
-    headers:
-      Total reads:
-          description: 'Total number of readas sequenced'
-          format: '{:,.0f}'
-      MBp:
-          description: 'Mega base pairs'
-      '%Q30':
-          description: 'Percent of reads over Q30'
   aa_diversity_stats:
     id: 'aa_diversity_stats'
     section_name: 'Diversity Summary'
@@ -309,25 +301,28 @@ custom_data:
     pconfig:
         id: 'evolved_sequence_counts_top_10_per_sample'
         namespace: '7mer counts'
-  aa_position_weights:
-    id: 'aa_position_weights'
-    section_name: 'Amino acid position weights'
+  aa_position_weights_barplot:
+    id: 'aa_position_weights_barplot'
+    section_name: 'Amino acid position weight barplot'
+  # aa_position_weights_matrix:
+  #   id: 'aa_position_weights_matrix'
+  #   section_name: 'Amino acid position weight matrix'
   bubble_plot:
     id: 'bubble_plot'
     section_name: 'Bubble Plot'
 
-table_columns_name:
-  Insertion Summary:
-    21nt_insertion: "# Reads with insertion"
-    low_quality_mapping: "# Low quality mapping"
-    no_coverage: "# No coverage on insertion"
-    insertion_lt_21: "# Insertion < 21nt"
-    insertion_gt_21: "# Insertion > 21nt"
-    percentage_21nt_insertion: "% Reads with insertion"
-    percentage_low_quality_mapping: "% Reads low quality mapping"
-    percentage_no_coverage: "% No coverage on insertion"
-    percentage_insertion_lt_21: "% Insertion < 21nt"
-    percentage_insertion_gt_21: "% Insertion > 21nt"
+# table_columns_name:
+#   Insertion Summary:
+#     21nt_insertion: "# Reads with insertion"
+#     low_quality_mapping: "# Low quality mapping"
+#     no_coverage: "# No coverage on insertion"
+#     insertion_lt_21: "# Insertion < 21nt"
+#     insertion_gt_21: "# Insertion > 21nt"
+#     percentage_21nt_insertion: "% Reads with insertion"
+#     percentage_low_quality_mapping: "% Reads low quality mapping"
+#     percentage_no_coverage: "% No coverage on insertion"
+#     percentage_insertion_lt_21: "% Insertion < 21nt"
+#     percentage_insertion_gt_21: "% Insertion > 21nt"
 
 table_cond_formatting_rules:
   Insertion Summary-percentage_21nt_insertion:
@@ -365,8 +360,10 @@ sp:
     fn: "*insertion_summary.csv"
   evolved_sequence_counts_top_10_per_sample:
     fn: "*evolved_sequence_counts_top_10_per_sample.csv"
-  aa_position_weights:
+  aa_position_weights_barplot:
     fn: "*position_weights_barplot.png"
+  aa_position_weights_matrix:
+    fn: "*position_weight_matrix.png"
   bubble_plot:
     fn: "*bubble_plot.png"
   aa_diversity_stats:

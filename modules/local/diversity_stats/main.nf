@@ -1,5 +1,6 @@
 process DIVERSITY_STATS {
     label 'process_low'
+    cache false
 
     // conda (params.enable_conda ? 'bioconda::pysam=0.19.1 conda-forge::screed=1.0.5 conda-forge::pandas=1.4.2 conda-forge::click=8.1.2' : null)
     container "821774515222.dkr.ecr.us-west-1.amazonaws.com/nextflow:compute-diversity"

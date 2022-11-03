@@ -18,9 +18,9 @@ workflow LIBRARY_DIVERSITY {
     bams = bam.map{it -> it[1]}.collect().dump(tag: "bams_for_translate")
     bais = bam.map{it -> it[2]}.collect().dump(tag: "bais_for_translate")
     TRANSLATE_BAMS(bams, bais, fasta)
-    ch_versions = ch_versions.mix(TRANSLATE_BAM.out.versions.first().ifEmpty(null))
+    ch_versions = ch_versions.mix(TRANSLATE_BAMS.out.versions.first().ifEmpty(null))
 
-    DIVERSITY_STATS(TRANSLATE_BAM.out.evolved_7mer_counts)
+    DIVERSITY_STATS(TRANSLATE_BAMS.out.evolved_7mer_counts)
     ch_versions = ch_versions.mix(DIVERSITY_STATS.out.versions.first().ifEmpty(null))
 
     emit:

@@ -294,6 +294,9 @@ custom_data:
         id: 'aa_diversity_stats'
         namespace: 'Diversity Stats'
         table_title: "Diversity Stats"
+  top_kmers_barplot:
+    id: 'top_kmers_barplot'
+    section_name: 'Top k-mers per sample'
   evolved_sequence_counts_top_10_per_sample:
     id: 'evolved_sequence_counts_top_10_per_sample'
     section_name: 'Top 10 amino acids per sample'
@@ -368,5 +371,7 @@ sp:
     fn: "*bubble_plot.png"
   aa_diversity_stats:
     fn: '*aa-diversity-stats.csv'
+  top_kmers_barplot:
+    fn: '*top_kmers_barplot.png'
 
 ignore_images: false

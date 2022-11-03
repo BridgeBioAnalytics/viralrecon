@@ -1,4 +1,4 @@
-process TRANSLATE_BAM {
+process TRANSLATE_BAMS {
     label 'process_low'
     cache false
 
@@ -6,7 +6,8 @@ process TRANSLATE_BAM {
     container "821774515222.dkr.ecr.us-west-1.amazonaws.com/nextflow:translate-bams"
 
     input:
-    tuple val(metas), path(bams), path(bais)
+    path(bams)
+    path(bais)
     path fasta
 
     output:

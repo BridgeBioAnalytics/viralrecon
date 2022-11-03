@@ -1,4 +1,4 @@
-//
+{//
 // Translate bam file
 //
 
@@ -30,5 +30,9 @@ workflow LIBRARY_DIVERSITY {
     cigar_strings              = TRANSLATE_BAMS.out.cigar_strings
     aa_diversity_stats         = DIVERSITY_STATS.out.aa_diversity_stats
     position_weights           = DIVERSITY_STATS.out.position_weights
+    bubble_plot                = DIVERSITY_STATS.out.bubble_plot
+    top_kmers_barplot          = DIVERSITY_STATS.out.top_kmers_barplot
+    position_weights_barplot   = DIVERSITY_STATS.out.position_weights_barplot
     versions                   = ch_versions                     // channel: [ versions.yml ]
+}
 }

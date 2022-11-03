@@ -444,7 +444,10 @@ workflow ILLUMINA {
             LIBRARY_DIVERSITY.out.evolved_7mer_counts_top_10.collect(),
             LIBRARY_DIVERSITY.out.insertion_summary.collect(),
             LIBRARY_DIVERSITY.out.aa_diversity_stats.collect(),
-            LIBRARY_DIVERSITY.out.position_weights.collect()
+            LIBRARY_DIVERSITY.out.position_weights.collect(),
+            LIBRARY_DIVERSITY.out.bubble_plot.collect(),
+            LIBRARY_DIVERSITY.out.top_kmers_barplot.collect(),
+            LIBRARY_DIVERSITY.out.position_weights_barplot.collect(),
         )
         multiqc_report = MULTIQC.out.report.toList()
     }

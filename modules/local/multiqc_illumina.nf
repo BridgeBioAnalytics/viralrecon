@@ -23,6 +23,9 @@ process MULTIQC {
     path insertion_summary
     path aa_diversity_stats
     path position_weights
+    path bubble_plot
+    path top_kmers_barplot
+    path position_weights_barplot
 
     output:
     path "*multiqc_report.html"     , emit: report

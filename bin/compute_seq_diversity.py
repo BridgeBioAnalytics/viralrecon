@@ -131,7 +131,7 @@ def compute_global_stats(sequence_counts):
     # Get per library stop codons
     protein_7mer_counts_no_stop_codons = protein_7mer_counts.loc[~with_stop_codons]
     per_library_n_stop_codons = protein_7mer_counts.apply(
-        lambda x: x.index.str.contains("\*").sum()
+        lambda x: x[x > 0].index.str.contains("\*").sum()
     )
     per_library_n_stop_codons.name = "n_stop_codons"
     per_library_stop_codons = 100 * protein_7mer_counts.apply(
@@ -323,7 +323,7 @@ def barplot_position_weights(position_weights_tidy, barplot_png):
         order=aa_order,
         hue_order=list(range(1, 8)),
         aspect=2,
-        col_wrap=1,
+        col_wrap=3,
         kind="bar",
         height=3,
     )
@@ -374,7 +374,9 @@ def bubble_plot(aa_combined, col_order=None, bubble_plot_png="bubble_plot.png"):
         col="library",
         kind="scatter",
         height=3,
+        hue_order=col_order,
         col_order=col_order,
+        col_wrap=4
     )
     # g.set(yscale="log")
     g.savefig(bubble_plot_png)
@@ -397,6 +399,7 @@ def barplot_top_kmers(bubble_plot_data, top_kmers_barplot_png):
         height=4,
         hue="library",
         dodge=False,
+        col_wrap=4,
     )
     g.set(xscale="log")
 

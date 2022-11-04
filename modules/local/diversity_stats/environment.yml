@@ -10,5 +10,6 @@ dependencies:
   - seaborn=0.11.2
   - python
   - pip
+  - upsetplot=0.6.1
   - pip:
     - matplotlib-venn==0.11.7

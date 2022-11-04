@@ -294,12 +294,38 @@ custom_data:
         id: 'aa_diversity_stats'
         namespace: 'Diversity Stats'
         table_title: "Diversity Stats"
+    headers:
+      percent_aa_7mer_diversity:
+        description: "Number of observed 7mers/number of reads with 7mers (no stop codons)"
+        format: "{:.2f}"
+      percent_all_possible_7mers:
+        description: "Fraction of all 20^7 possible 7-mers"
+        format: "{:.2e}"
+      percent_nt_21mer_diversity:
+        description: "Number of observed 21mers/number of reads with 21mer insertion"
+        format: "{:.2f}"
+      n_7mers:
+        description: "Number of reads with 7-mers, no stop codons"
+        format: "{:,.0f}"
+      n_stop_codons:
+        description: "Number of reads with stop codons"
+        format: "{:,.0f}"
+      percent_stop_codons:
+        description: "Percent of insertion reads with stop codons"
+        format: "{:.2f}"
+      gini_coefficient:
+        description: "Inequality metric from economics, where 100 = Egyptian Pharoah, meaning a single k-mer gets all the reads and, 1 = 'communism', all k-mers have equal reads"
+        format: "{:.2f}"
+      shannon_index:
+        description: "Entropy index, where higher means more diverse"
+        format: "{:.2f}"
+
   top_kmers_barplot:
     id: 'top_kmers_barplot'
     section_name: 'Top k-mers per sample'
   evolved_sequence_counts_top_10_per_sample:
     id: 'evolved_sequence_counts_top_10_per_sample'
-    section_name: 'Top 10 amino acids per sample'
+    section_name: 'Top 10 k-mers per sample, sortable table'
     plot_type: 'table'
     pconfig:
         id: 'evolved_sequence_counts_top_10_per_sample'

@@ -9,13 +9,15 @@ process DIVERSITY_STATS {
     path evolved_sequence_counts
 
     output:
-    path 'aa-diversity-stats.csv'       , emit: aa_diversity_stats
-    path 'bubble_plot.png'              , emit: bubble_plot
-    path 'position_weights_barplot.png' , emit: position_weights_barplot
-    path '*position_weights.csv'        , emit: position_weights
-    path 'top_kmers_barplot.png'        , emit: top_kmers_barplot
-    path 'venn_diagram.png'             , optional:true, emit: venn_diagram
-    path "versions.yml", emit: versions
+    path 'aa-diversity-stats.csv'           , emit: aa_diversity_stats
+    path 'bubble_plot.png'                  , emit: bubble_plot
+    path 'position_weights_barplot.png'     , emit: position_weights_barplot
+    path '*position_weights.csv'            , emit: position_weights
+    path 'top_kmers_barplot.png'            , emit: top_kmers_barplot
+    path '*position_weight_matrix.png'      , emit: position_weight_matrices
+    path '*position_probability_matrix.png' , emit: position_probability_matrices
+    path 'venn_diagram.png'                 , optional:true, emit: venn_diagram
+    path "versions.yml"                     , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

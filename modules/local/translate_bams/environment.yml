@@ -1,0 +1,14 @@
+name: nf-core-translate-bam
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - click=8.1.2
+  - pandas=1.4.2
+  - samtools=1.15.1
+  - screed=1.0.5
+  - pip
+  - python
+  - pip:
+    - pysam==0.19.1

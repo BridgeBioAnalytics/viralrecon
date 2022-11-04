@@ -76,6 +76,7 @@ include { VARIANTS_LONG_TABLE } from '../subworkflows/local/variants_long_table'
 include { ASSEMBLY_SPADES     } from '../subworkflows/local/assembly_spades'
 include { ASSEMBLY_UNICYCLER  } from '../subworkflows/local/assembly_unicycler'
 include { ASSEMBLY_MINIA      } from '../subworkflows/local/assembly_minia'
+include { LIBRARY_DIVERSITY   } from '../subworkflows/local/library_diversity'
 
 /*
 ========================================================================================
@@ -201,7 +202,9 @@ workflow ILLUMINA {
     FASTQC_FASTP (
         ch_cat_fastq,
         params.save_trimmed_fail,
-        false
+
+        // True for save_merged_reads
+        true
     )
     ch_variants_fastq = FASTQC_FASTP.out.reads
     ch_versions = ch_versions.mix(FASTQC_FASTP.out.versions)
@@ -402,199 +405,14 @@ workflow ILLUMINA {
         }
     }
 
-    //
-    // SUBWORKFLOW: Call variants with IVar
-    //
-    ch_vcf                    = Channel.empty()
-    ch_tbi                    = Channel.empty()
-    ch_ivar_counts_multiqc    = Channel.empty()
-    ch_bcftools_stats_multiqc = Channel.empty()
-    ch_snpsift_txt            = Channel.empty()
-    ch_snpeff_multiqc         = Channel.empty()
-    if (!params.skip_variants && variant_caller == 'ivar') {
-        VARIANTS_IVAR (
-            ch_bam,
-            PREPARE_GENOME.out.fasta,
-            (params.protocol == 'amplicon' || !params.skip_asciigenome) ? PREPARE_GENOME.out.fai : [],
-            (params.protocol == 'amplicon' || !params.skip_asciigenome) ? PREPARE_GENOME.out.chrom_sizes : [],
-            PREPARE_GENOME.out.gff,
-            (params.protocol == 'amplicon' && params.primer_bed) ? PREPARE_GENOME.out.primer_bed : [],
-            PREPARE_GENOME.out.snpeff_db,
-            PREPARE_GENOME.out.snpeff_config,
-            ch_ivar_variants_header_mqc
-        )
-        ch_vcf                    = VARIANTS_IVAR.out.vcf
-        ch_tbi                    = VARIANTS_IVAR.out.tbi
-        ch_ivar_counts_multiqc    = VARIANTS_IVAR.out.multiqc_tsv
-        ch_bcftools_stats_multiqc = VARIANTS_IVAR.out.stats
-        ch_snpeff_multiqc         = VARIANTS_IVAR.out.snpeff_csv
-        ch_snpsift_txt            = VARIANTS_IVAR.out.snpsift_txt
-        ch_versions               = ch_versions.mix(VARIANTS_IVAR.out.versions)
-    }
+
 
     //
-    // SUBWORKFLOW: Call variants with BCFTools
+    // SUBWORKFLOW: Translate aligned bams to protein
+    //              and compute library diversity metrics
     //
-    if (!params.skip_variants && variant_caller == 'bcftools') {
-        VARIANTS_BCFTOOLS (
-            ch_bam,
-            PREPARE_GENOME.out.fasta,
-            (params.protocol == 'amplicon' || !params.skip_asciigenome) ? PREPARE_GENOME.out.chrom_sizes : [],
-            PREPARE_GENOME.out.gff,
-            (params.protocol == 'amplicon' && params.primer_bed) ? PREPARE_GENOME.out.primer_bed : [],
-            PREPARE_GENOME.out.snpeff_db,
-            PREPARE_GENOME.out.snpeff_config
-        )
-        ch_vcf                    = VARIANTS_BCFTOOLS.out.vcf
-        ch_tbi                    = VARIANTS_BCFTOOLS.out.tbi
-        ch_bcftools_stats_multiqc = VARIANTS_BCFTOOLS.out.stats
-        ch_snpeff_multiqc         = VARIANTS_BCFTOOLS.out.snpeff_csv
-        ch_snpsift_txt            = VARIANTS_BCFTOOLS.out.snpsift_txt
-        ch_versions               = ch_versions.mix(VARIANTS_BCFTOOLS.out.versions)
-    }
+    LIBRARY_DIVERSITY(ch_bam.join(ch_bai, by: [0]), PREPARE_GENOME.out.fasta)
 
-    //
-    // SUBWORKFLOW: Call consensus with iVar and downstream QC
-    //
-    ch_quast_multiqc    = Channel.empty()
-    ch_pangolin_multiqc = Channel.empty()
-    ch_nextclade_report = Channel.empty()
-    if (!params.skip_consensus && params.consensus_caller == 'ivar') {
-        CONSENSUS_IVAR (
-            ch_bam,
-            PREPARE_GENOME.out.fasta,
-            PREPARE_GENOME.out.gff,
-            PREPARE_GENOME.out.nextclade_db
-        )
-
-        ch_quast_multiqc    = CONSENSUS_IVAR.out.quast_tsv
-        ch_pangolin_multiqc = CONSENSUS_IVAR.out.pangolin_report
-        ch_nextclade_report = CONSENSUS_IVAR.out.nextclade_report
-        ch_versions         = ch_versions.mix(CONSENSUS_IVAR.out.versions)
-    }
-
-    //
-    // SUBWORKFLOW: Call consensus with BCFTools
-    //
-    if (!params.skip_consensus && params.consensus_caller == 'bcftools' && variant_caller) {
-        CONSENSUS_BCFTOOLS (
-            ch_bam,
-            ch_vcf,
-            ch_tbi,
-            PREPARE_GENOME.out.fasta,
-            PREPARE_GENOME.out.gff,
-            PREPARE_GENOME.out.nextclade_db
-        )
-
-        ch_quast_multiqc    = CONSENSUS_BCFTOOLS.out.quast_tsv
-        ch_pangolin_multiqc = CONSENSUS_BCFTOOLS.out.pangolin_report
-        ch_nextclade_report = CONSENSUS_BCFTOOLS.out.nextclade_report
-        ch_versions         = ch_versions.mix(CONSENSUS_BCFTOOLS.out.versions)
-    }
-
-    //
-    // MODULE: Get Nextclade clade information for MultiQC report
-    //
-    ch_nextclade_multiqc = Channel.empty()
-    if (!params.skip_nextclade) {
-        ch_nextclade_report
-            .map { meta, csv ->
-                def clade = WorkflowCommons.getNextcladeFieldMapFromCsv(csv)['clade']
-                return [ "$meta.id\t$clade" ]
-            }
-            .set { ch_nextclade_multiqc }
-
-        MULTIQC_TSV_NEXTCLADE (
-            ch_nextclade_multiqc.collect(),
-            ['Sample', 'clade'],
-            'nextclade_clade'
-        )
-        .set { ch_nextclade_multiqc }
-    }
-
-    //
-    // SUBWORKFLOW: Create variants long table report
-    //
-    if (!params.skip_variants && !params.skip_variants_long_table && params.gff && !params.skip_snpeff) {
-        VARIANTS_LONG_TABLE (
-            ch_vcf,
-            ch_tbi,
-            ch_snpsift_txt,
-            ch_pangolin_multiqc
-        )
-        ch_versions = ch_versions.mix(VARIANTS_LONG_TABLE.out.versions)
-    }
-
-    //
-    // MODULE: Primer trimming with Cutadapt
-    //
-    ch_cutadapt_multiqc = Channel.empty()
-    if (params.protocol == 'amplicon' && !params.skip_assembly && !params.skip_cutadapt) {
-        CUTADAPT (
-            ch_assembly_fastq,
-            PREPARE_GENOME.out.primer_fasta
-        )
-        ch_assembly_fastq   = CUTADAPT.out.reads
-        ch_cutadapt_multiqc = CUTADAPT.out.log
-        ch_versions         = ch_versions.mix(CUTADAPT.out.versions.first().ifEmpty(null))
-
-        if (!params.skip_fastqc) {
-            FASTQC (
-                CUTADAPT.out.reads
-            )
-            ch_versions = ch_versions.mix(FASTQC.out.versions.first().ifEmpty(null))
-        }
-    }
-
-    //
-    // SUBWORKFLOW: Run SPAdes assembly and downstream analysis
-    //
-    ch_spades_quast_multiqc = Channel.empty()
-    if (!params.skip_assembly && 'spades' in assemblers) {
-        ASSEMBLY_SPADES (
-            ch_assembly_fastq.map { meta, fastq -> [ meta, fastq, [], [] ] },
-            params.spades_mode,
-            ch_spades_hmm,
-            PREPARE_GENOME.out.fasta,
-            PREPARE_GENOME.out.gff,
-            PREPARE_GENOME.out.blast_db,
-            ch_blast_outfmt6_header
-        )
-        ch_spades_quast_multiqc = ASSEMBLY_SPADES.out.quast_tsv
-        ch_versions             = ch_versions.mix(ASSEMBLY_SPADES.out.versions)
-    }
-
-    //
-    // SUBWORKFLOW: Run Unicycler assembly and downstream analysis
-    //
-    ch_unicycler_quast_multiqc = Channel.empty()
-    if (!params.skip_assembly && 'unicycler' in assemblers) {
-        ASSEMBLY_UNICYCLER (
-            ch_assembly_fastq.map { meta, fastq -> [ meta, fastq, [] ] },
-            PREPARE_GENOME.out.fasta,
-            PREPARE_GENOME.out.gff,
-            PREPARE_GENOME.out.blast_db,
-            ch_blast_outfmt6_header
-        )
-        ch_unicycler_quast_multiqc = ASSEMBLY_UNICYCLER.out.quast_tsv
-        ch_versions                = ch_versions.mix(ASSEMBLY_UNICYCLER.out.versions)
-    }
-
-    //
-    // SUBWORKFLOW: Run minia assembly and downstream analysis
-    //
-    ch_minia_quast_multiqc = Channel.empty()
-    if (!params.skip_assembly && 'minia' in assemblers) {
-        ASSEMBLY_MINIA (
-            ch_assembly_fastq,
-            PREPARE_GENOME.out.fasta,
-            PREPARE_GENOME.out.gff,
-            PREPARE_GENOME.out.blast_db,
-            ch_blast_outfmt6_header
-        )
-        ch_minia_quast_multiqc = ASSEMBLY_MINIA.out.quast_tsv
-        ch_versions            = ch_versions.mix(ASSEMBLY_MINIA.out.versions)
-    }
 
     //
     // MODULE: Pipeline reporting
@@ -623,19 +441,13 @@ workflow ILLUMINA {
             ch_kraken2_multiqc.collect{it[1]}.ifEmpty([]),
             ch_bowtie2_flagstat_multiqc.collect{it[1]}.ifEmpty([]),
             ch_bowtie2_multiqc.collect{it[1]}.ifEmpty([]),
-            ch_ivar_trim_flagstat_multiqc.collect{it[1]}.ifEmpty([]),
-            ch_markduplicates_flagstat_multiqc.collect{it[1]}.ifEmpty([]),
-            ch_mosdepth_multiqc.collect{it[1]}.ifEmpty([]),
-            ch_ivar_counts_multiqc.collect{it[1]}.ifEmpty([]),
-            ch_bcftools_stats_multiqc.collect{it[1]}.ifEmpty([]),
-            ch_snpeff_multiqc.collect{it[1]}.ifEmpty([]),
-            ch_quast_multiqc.collect().ifEmpty([]),
-            ch_pangolin_multiqc.collect{it[1]}.ifEmpty([]),
-            ch_nextclade_multiqc.collect().ifEmpty([]),
-            ch_cutadapt_multiqc.collect{it[1]}.ifEmpty([]),
-            ch_spades_quast_multiqc.collect().ifEmpty([]),
-            ch_unicycler_quast_multiqc.collect().ifEmpty([]),
-            ch_minia_quast_multiqc.collect().ifEmpty([])
+            LIBRARY_DIVERSITY.out.evolved_7mer_counts_top_10.collect(),
+            LIBRARY_DIVERSITY.out.insertion_summary.collect(),
+            LIBRARY_DIVERSITY.out.aa_diversity_stats.collect(),
+            LIBRARY_DIVERSITY.out.position_weights.collect(),
+            LIBRARY_DIVERSITY.out.bubble_plot.collect(),
+            LIBRARY_DIVERSITY.out.top_kmers_barplot.collect(),
+            LIBRARY_DIVERSITY.out.position_weights_barplot.collect(),
         )
         multiqc_report = MULTIQC.out.report.toList()
     }

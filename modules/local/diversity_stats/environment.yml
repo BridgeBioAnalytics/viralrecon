@@ -1,0 +1,15 @@
+name: nf-core-compute-diversity
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - click=8.1.2
+  - matplotlib=3.5.1
+  - pandas=1.4.2
+  - seaborn=0.11.2
+  - python
+  - pip
+  - upsetplot=0.6.1
+  - pip:
+    - matplotlib-venn==0.11.7

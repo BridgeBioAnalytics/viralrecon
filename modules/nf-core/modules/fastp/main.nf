@@ -41,6 +41,9 @@ process FASTP {
             $fail_fastq \\
             $args \\
             2> ${prefix}.fastp.log
+        
+        # Hack to use the single-end trimmed fastqs as the merged ones
+        cp ${prefix}.fastp.fastq.gz ${prefix}.merged.fastq.gz 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
             fastp: \$(fastp --version 2>&1 | sed -e "s/fastp //g")

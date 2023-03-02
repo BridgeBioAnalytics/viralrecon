@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
+import argparse
+import errno
 import os
 import sys
-import errno
-import argparse
 
 
 def parse_args(args=None):
@@ -105,7 +105,7 @@ def check_illumina_samplesheet(file_in, file_out):
             ## Check FastQ file extension
             for fastq in [fastq_1, fastq_2]:
                 if fastq:
-                    if fastq.find(" ") != -1:
+                    if os.path.basename(fastq).find(" ") != -1:
                         print_error("FastQ file contains spaces!", "Line", line)
                     if not fastq.endswith(".fastq.gz") and not fastq.endswith(".fq.gz"):
                         print_error(

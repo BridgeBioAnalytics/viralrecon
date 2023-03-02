@@ -218,42 +218,6 @@ custom_data:
       "% Non-host reads (Kraken 2)":
         description: "Total number of non-host reads identified by Kraken2"
         format: "{:,.2f}"
-      "# Contigs (SPAdes)":
-        description: "Total number of contigs in SPAdes assembly as calculated by QUAST"
-        format: "{:,.0f}"
-      "Largest contig (SPAdes)":
-        description: "Size of largest contig in SPAdes assembly as calculated by QUAST"
-        format: "{:,.0f}"
-      "% Genome fraction (SPAdes)":
-        description: "% genome fraction for SPAdes assembly as calculated by QUAST"
-        format: "{:,.2f}"
-      "N50 (SPAdes)":
-        description: "N50 metric for SPAdes assembly as calculated by QUAST"
-        format: "{:,.2f}"
-      "# Contigs (Unicycler)":
-        description: "Total number of contigs in Unicycler assembly as calculated by QUAST"
-        format: "{:,.0f}"
-      "Largest contig (Unicycler)":
-        description: "Size of largest contig in Unicycler assembly as calculated by QUAST"
-        format: "{:,.0f}"
-      "% Genome fraction (Unicycler)":
-        description: "% genome fraction for Unicycler assembly as calculated by QUAST"
-        format: "{:,.2f}"
-      "N50 (Unicycler)":
-        description: "N50 metric for Unicycler assembly as calculated by QUAST"
-        format: "{:,.2f}"
-      "# Contigs (minia)":
-        description: "Total number of contigs in minia assembly as calculated by QUAST"
-        format: "{:,.0f}"
-      "Largest contig (minia)":
-        description: "Size of largest contig in minia assembly as calculated by QUAST"
-        format: "{:,.0f}"
-      "% Genome fraction (minia)":
-        description: "% genome fraction for minia assembly as calculated by QUAST"
-        format: "{:,.2f}"
-      "N50 (minia)":
-        description: "N50 metric for minia assembly as calculated by QUAST"
-        format: "{:,.2f}"
     pconfig:
       id: "summary_assembly_metrics_plot"
       table_title: "De novo assembly metrics"

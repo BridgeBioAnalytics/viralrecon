@@ -159,7 +159,7 @@ class InsertionCounter:
         for i, read in enumerate(bamfile.fetch('amplicon', *self.directed_evolution_interval)):
             self.cigar_strings[sample_name][read.cigarstring] += 1
 
-            if read.mapping_quality < 40:
+            if read.mapping_quality < 30:
                 self.increment_counter_classify_read(read, read_id_to_classification, sample_name,
                                                      category="low_quality_mapping")
                 continue

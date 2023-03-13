@@ -6,6 +6,7 @@ import matplotlib_venn
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import logomaker as lm
 
 codons_nnn = {
     "TTT": "F",
@@ -123,7 +124,7 @@ def compute_global_stats(sequence_counts):
     per_library_nucleotide_diversity_percentage = 100 * nucleotide_21mer_counts.apply(
         lambda x: (x > 0).sum() / x.sum()
     )
-    per_library_nucleotide_diversity_percentage.name = 'percent_nt_21mer_diversity'
+    per_library_nucleotide_diversity_percentage.name = "percent_nt_21mer_diversity"
 
     protein_7mer_counts = sequence_counts.groupby(level=0).sum()
     with_stop_codons = protein_7mer_counts.index.str.contains("\*")
@@ -277,6 +278,94 @@ def _compute_entropy(position_probability_matrices):
     return entropies
 
 
+def barplot_entropies_per_position(entropies, prefix):
+    entropies_tidy = entropies.unstack().reset_index()
+    entropies_tidy = entropies_tidy.rename(columns={"level_0": "library", 0: "entropy"})
+
+    g = sns.catplot(
+        data=entropies_tidy,
+        y="entropy",
+        x="position",
+        hue="library",
+        palette="viridis",
+        # order=aa_order,
+        # hue_order=list(range(1, 8)),
+        aspect=2,
+        kind="bar",
+        height=3,
+    )
+    g.savefig(f"{prefix}__entropies_barplot.png")
+
+
+def barplot_position_probability(position_probability_matrices, prefix):
+    dfs = []
+    for library, matrix in position_probability_matrices.items():
+        df = matrix.stack().reset_index()
+        df["library"] = library
+        dfs.append(df)
+    position_prob_df = pd.concat(dfs)
+    position_prob_df = position_prob_df.rename(
+        columns={"level_0": "aa", "level_1": "position", 0: "probability"}
+    )
+
+    # PLot per-position enrichment
+    g = sns.catplot(
+        data=position_prob_df,
+        kind="bar",
+        x="aa",
+        y="probability",
+        col="library",
+        row="position",
+        height=2,
+        aspect=2,
+    )
+    g.savefig(
+        f"{prefix}__position_probability_barplot_separate_libraries_and_positions.pdf"
+    )
+
+    # Plot summary across all positions
+    g = sns.catplot(
+        data=position_prob_df,
+        kind="bar",
+        x="aa",
+        y="probability",
+        col="library",
+        height=2,
+        aspect=2,
+    )
+    g.savefig(
+        f"{prefix}__position_probability_barplot_separate_libraries_mean_positions.pdf"
+    )
+
+    # Compare per-position amino acid frequency library-by-library
+    g = sns.catplot(
+        data=position_prob_df,
+        kind="bar",
+        x="aa",
+        y="probability",
+        hue="library",
+        height=2,
+        aspect=2,
+        row="position",
+    )
+    g.savefig(f"{prefix}__position_probability_barplot_compare_libraries.pdf")
+
+    # Take the mean across positions
+    g = sns.catplot(
+        data=position_prob_df,
+        kind="bar",
+        x="aa",
+        y="probability",
+        hue="library",
+        height=2,
+        aspect=2,
+        errwidth=1,
+    )
+    g.savefig(
+        f"{prefix}__position_probability_barplot_compare_libraries_mean_across_positions.pdf"
+    )
+
+
 def make_position_weight_matrices(protein_7mer_counts_no_stop_codons, prefix):
     position_freq_matrices = _make_position_frequency_matrices(
         protein_7mer_counts_no_stop_codons
@@ -284,11 +373,15 @@ def make_position_weight_matrices(protein_7mer_counts_no_stop_codons, prefix):
     position_probability_matrices = _make_position_probability_matrices(
         position_freq_matrices
     )
+
+    barplot_position_probability(position_probability_matrices, prefix)
     entropies = _compute_entropy(position_probability_matrices)
 
     fig, ax = plt.subplots()
     sns.heatmap(entropies.T)
     fig.savefig(f"{prefix}__entropies.png")
+
+    barplot_entropies_per_position(entropies, prefix)
 
     position_weight_matrices = _make_position_weight_matricies(
         position_probability_matrices
@@ -309,7 +402,7 @@ def make_tidy_position_weights(position_weight_matrices):
     return position_weights_tidy
 
 
-def barplot_position_weights(position_weights_tidy, barplot_png):
+def barplot_position_weights(position_weights_tidy, barplot_png, col_wrap=3):
     aa_mean_weights = position_weights_tidy.groupby("aa").weight.mean().sort_values()
     aa_order = aa_mean_weights.index
 
@@ -323,11 +416,25 @@ def barplot_position_weights(position_weights_tidy, barplot_png):
         order=aa_order,
         hue_order=list(range(1, 8)),
         aspect=2,
-        col_wrap=3,
+        col_wrap=col_wrap,
         kind="bar",
         height=3,
     )
     g.savefig(barplot_png)
+
+    order = position_weights_tidy.groupby("aa").weight.mean().sort_values().index[::-1]
+    g = sns.catplot(
+        data=position_weights_tidy,
+        x="aa",
+        y="weight",
+        col="pos",
+        kind="bar",
+        order=order,
+        aspect=1.5,
+        height=2,
+        col_wrap=4,
+    )
+    g.savefig("position_weights_across_libraries.pdf")
 
 
 def make_data_for_bubble_plot(sequence_counts):
@@ -361,7 +468,9 @@ def make_data_for_bubble_plot(sequence_counts):
     return aa_combined
 
 
-def bubble_plot(aa_combined, col_order=None, bubble_plot_png="bubble_plot.png"):
+def bubble_plot(
+    aa_combined, col_order=None, bubble_plot_png="bubble_plot.png", col_wrap=4
+):
     # Create plot
     aa_combined["percent_reads_log10"] = np.log10(aa_combined["percent_reads"])
     col_order = sorted(list(aa_combined["library"].unique()))
@@ -376,7 +485,7 @@ def bubble_plot(aa_combined, col_order=None, bubble_plot_png="bubble_plot.png"):
         height=3,
         hue_order=col_order,
         col_order=col_order,
-        col_wrap=4
+        col_wrap=col_wrap,
     )
     # g.set(yscale="log")
     g.savefig(bubble_plot_png)
@@ -384,7 +493,7 @@ def bubble_plot(aa_combined, col_order=None, bubble_plot_png="bubble_plot.png"):
     return g
 
 
-def barplot_top_kmers(bubble_plot_data, top_kmers_barplot_png):
+def barplot_top_kmers(bubble_plot_data, top_kmers_barplot_png, col_wrap=4):
     top10 = bubble_plot_data.groupby("library").apply(
         lambda x: x.nlargest(10, "n_reads")
     )
@@ -399,7 +508,7 @@ def barplot_top_kmers(bubble_plot_data, top_kmers_barplot_png):
         height=4,
         hue="library",
         dodge=False,
-        col_wrap=4,
+        col_wrap=col_wrap,
     )
     g.set(xscale="log")
 
@@ -415,6 +524,25 @@ def barplot_top_kmers(bubble_plot_data, top_kmers_barplot_png):
             )
     g.fig.tight_layout()
     g.savefig(top_kmers_barplot_png)
+
+
+def get_col_wrap(position_weights_tidy):
+    """Get number of columns to plot for seaborn catplots"""
+    n_libraries = position_weights_tidy["library"].nunique()
+    if n_libraries < 3:
+        col_wrap = n_libraries
+    else:
+        col_wrap = 3
+    return col_wrap
+
+
+def make_logos(position_weights_tidy):
+    for library, df in position_weights_tidy.groupby("library"):
+        matrix = df.pivot(index="pos", columns="aa", values="weight")
+        matrix = matrix[matrix > 0].fillna(0)
+        lm.Logo(matrix)
+        fig = plt.gcf()
+        fig.savefig(f"{library}_enriched_sequence_logo.png")
 
 
 @click.command()
@@ -457,9 +585,11 @@ def main(
     # # Make bubble plot
     bubble_plot_data = make_data_for_bubble_plot(sequence_counts)
 
+    col_wrap = get_col_wrap(bubble_plot_data)
+
     # Bubble plot stopped working and I don't know why
-    bubble_plot(bubble_plot_data, bubble_plot_png=bubble_plot_png)
-    barplot_top_kmers(bubble_plot_data, top_kmers_barplot_png)
+    bubble_plot(bubble_plot_data, bubble_plot_png=bubble_plot_png, col_wrap=col_wrap)
+    barplot_top_kmers(bubble_plot_data, top_kmers_barplot_png, col_wrap=col_wrap)
 
     position_weight_matrices = make_position_weight_matrices(
         protein_7mer_counts_no_stop_codons, prefix
@@ -468,8 +598,13 @@ def main(
     position_weights_tidy = make_tidy_position_weights(position_weight_matrices)
     position_weights_tidy.to_csv(position_weights_csv)
 
-    # Make barplot of position weights, sortedy by amino acid
-    barplot_position_weights(position_weights_tidy, position_weights_barplot_png)
+    # Make barplot of position weights, sorted by amino acid
+    barplot_position_weights(
+        position_weights_tidy, position_weights_barplot_png, col_wrap=col_wrap
+    )
+
+    # Make sequence logos of enriched k-mers
+    make_logos(position_weights_tidy)
 
 
 if __name__ == "__main__":

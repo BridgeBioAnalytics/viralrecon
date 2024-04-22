@@ -8,6 +8,7 @@ process TRANSLATE_BAMS {
     path(bams)
     path(bais)
     path fasta
+    val directed_evolution_sequence
 
     output:
     path 'evolved_sequence_counts.csv'                  , emit: evolved_7mer_counts
@@ -25,6 +26,7 @@ process TRANSLATE_BAMS {
     def args3 = task.ext.args3 ?: ''
     """
     translate_bams.py \\
+        --directed-evolution-sequence ${directed_evolution_sequence} \\
         --fasta ${fasta} \\
         ${bams}
 

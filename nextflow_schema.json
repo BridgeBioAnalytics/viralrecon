@@ -61,6 +61,11 @@
                     "fa_icon": "fas fa-book",
                     "help_text": "You can find the keys to specify the genomes in the [Genomes config file](https://github.com/nf-core/configs/blob/master/conf/pipeline/viralrecon/genomes.config)."
                 },
+                "directed_evolution_sequence": {
+                    "type": "string",
+                    "default": "NNSNNSNNSNNSNNSNNSNNS",
+                    "description": "21nt sequence to look for to find the randomized insert"
+                },
                 "fasta": {
                     "type": "string",
                     "format": "file-path",
@@ -725,5 +730,11 @@
         {
             "$ref": "#/definitions/institutional_config_options"
         }
-    ]
+    ],
+    "properties": {
+        "schema_ignore_params": {
+            "type": "string",
+            "default": "genomes,igenomes_base"
+        }
+    }
 }

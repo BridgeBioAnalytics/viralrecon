@@ -33,6 +33,8 @@ def assemblers = params.assemblers ? params.assemblers.split(',').collect{ it.tr
 def variant_caller = params.variant_caller
 if (!variant_caller) { variant_caller = params.protocol == 'amplicon' ? 'ivar' : 'bcftools' }
 
+def directed_evolution_sequence = params.directed_evolution_sequence
+
 /*
 ========================================================================================
     CONFIG FILES
@@ -432,7 +434,11 @@ workflow ILLUMINA {
     // SUBWORKFLOW: Translate aligned bams to protein
     //              and compute library diversity metrics
     //
-    LIBRARY_DIVERSITY(ch_bam.join(ch_bai, by: [0]), PREPARE_GENOME.out.fasta)
+    LIBRARY_DIVERSITY(
+        ch_bam.join(ch_bai, by: [0]),
+        PREPARE_GENOME.out.fasta,
+        directed_evolution_sequence
+    )
 
 
     //

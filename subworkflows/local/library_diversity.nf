@@ -8,8 +8,9 @@ include { DIVERSITY_STATS } from '../../modules/local/diversity_stats/main'
 
 workflow LIBRARY_DIVERSITY {
     take:
-    bam           // channel: [ val(meta), [ bam ] ]
-    fasta         // channel: /path/to/genome.fasta
+    bam                         // channel: [ val(meta), [ bam ] ]
+    fasta                       // channel: /path/to/genome.fasta
+    directed_evolution_sequence // val("NNSNNSNNSNNSNNSNNSNNS") for example
 
     main:
 
@@ -17,7 +18,7 @@ workflow LIBRARY_DIVERSITY {
 
     bams = bam.map{it -> it[1]}.collect().dump(tag: "bams_for_translate")
     bais = bam.map{it -> it[2]}.collect().dump(tag: "bais_for_translate")
-    TRANSLATE_BAMS(bams, bais, fasta)
+    TRANSLATE_BAMS(bams, bais, fasta, directed_evolution_sequence)
     ch_versions = ch_versions.mix(TRANSLATE_BAMS.out.versions.first().ifEmpty(null))
 
     DIVERSITY_STATS(TRANSLATE_BAMS.out.evolved_7mer_counts)

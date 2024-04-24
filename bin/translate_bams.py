@@ -233,6 +233,9 @@ def get_directed_evolution_interval(fasta, evolution_sequence):
         for record in records:
             seq = record["sequence"]
             start = seq.find(evolution_sequence)
+            if start < 0:
+                raise ValueError(f"Could not find {evolution_sequence} in {record["name"]}:\n{seq}")
+
             end = start + len(evolution_sequence)
             # Only look at the first sequence
             break

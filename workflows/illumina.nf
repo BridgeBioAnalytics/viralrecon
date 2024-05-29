@@ -33,6 +33,8 @@ def assemblers = params.assemblers ? params.assemblers.split(',').collect{ it.tr
 def variant_caller = params.variant_caller
 if (!variant_caller) { variant_caller = params.protocol == 'amplicon' ? 'ivar' : 'bcftools' }
 
+def directed_evolution_sequence = params.directed_evolution_sequence
+
 /*
 ========================================================================================
     CONFIG FILES
@@ -73,9 +75,6 @@ include { VARIANTS_BCFTOOLS   } from '../subworkflows/local/variants_bcftools'
 include { CONSENSUS_IVAR      } from '../subworkflows/local/consensus_ivar'
 include { CONSENSUS_BCFTOOLS  } from '../subworkflows/local/consensus_bcftools'
 include { VARIANTS_LONG_TABLE } from '../subworkflows/local/variants_long_table'
-include { ASSEMBLY_SPADES     } from '../subworkflows/local/assembly_spades'
-include { ASSEMBLY_UNICYCLER  } from '../subworkflows/local/assembly_unicycler'
-include { ASSEMBLY_MINIA      } from '../subworkflows/local/assembly_minia'
 include { LIBRARY_DIVERSITY   } from '../subworkflows/local/library_diversity'
 
 /*
@@ -427,62 +426,16 @@ workflow ILLUMINA {
         }
     }
 
-    //
-    // SUBWORKFLOW: Run SPAdes assembly and downstream analysis
-    //
-    ch_spades_quast_multiqc = Channel.empty()
-    if (!params.skip_assembly && 'spades' in assemblers) {
-        ASSEMBLY_SPADES (
-            ch_assembly_fastq.map { meta, fastq -> [ meta, fastq, [], [] ] },
-            params.spades_mode,
-            ch_spades_hmm,
-            PREPARE_GENOME.out.fasta,
-            PREPARE_GENOME.out.gff,
-            PREPARE_GENOME.out.blast_db,
-            ch_blast_outfmt6_header
-        )
-        ch_spades_quast_multiqc = ASSEMBLY_SPADES.out.quast_tsv
-        ch_versions             = ch_versions.mix(ASSEMBLY_SPADES.out.versions)
-    }
-
-    //
-    // SUBWORKFLOW: Run Unicycler assembly and downstream analysis
-    //
-    ch_unicycler_quast_multiqc = Channel.empty()
-    if (!params.skip_assembly && 'unicycler' in assemblers) {
-        ASSEMBLY_UNICYCLER (
-            ch_assembly_fastq.map { meta, fastq -> [ meta, fastq, [] ] },
-            PREPARE_GENOME.out.fasta,
-            PREPARE_GENOME.out.gff,
-            PREPARE_GENOME.out.blast_db,
-            ch_blast_outfmt6_header
-        )
-        ch_unicycler_quast_multiqc = ASSEMBLY_UNICYCLER.out.quast_tsv
-        ch_versions                = ch_versions.mix(ASSEMBLY_UNICYCLER.out.versions)
-    }
-
-    //
-    // SUBWORKFLOW: Run minia assembly and downstream analysis
-    //
-    ch_minia_quast_multiqc = Channel.empty()
-    if (!params.skip_assembly && 'minia' in assemblers) {
-        ASSEMBLY_MINIA (
-            ch_assembly_fastq,
-            PREPARE_GENOME.out.fasta,
-            PREPARE_GENOME.out.gff,
-            PREPARE_GENOME.out.blast_db,
-            ch_blast_outfmt6_header
-        )
-        ch_minia_quast_multiqc = ASSEMBLY_MINIA.out.quast_tsv
-        ch_versions            = ch_versions.mix(ASSEMBLY_MINIA.out.versions)
-    }
-
 
     //
     // SUBWORKFLOW: Translate aligned bams to protein
     //              and compute library diversity metrics
     //
-    LIBRARY_DIVERSITY(ch_bam.join(ch_bai, by: [0]), PREPARE_GENOME.out.fasta)
+    LIBRARY_DIVERSITY(
+        ch_bam.join(ch_bai, by: [0]),
+        PREPARE_GENOME.out.fasta,
+        directed_evolution_sequence
+    )
 
 
     //
